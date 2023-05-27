@@ -2,6 +2,16 @@
 require_relative 'utils'
 if defined?(OpenSSL)
 class OpenSSL::TestProvider < OpenSSL::TestCase
+  def test_openssl_providers
+    with_openssl <<-'end;'
+      orig = OpenSSL::Provider.providers
+      loaded_legacy = OpenSSL::Provider.load("legacy")
+      
+      assert_equal(true, loaded_legacy)
+      assert_equal(1, OpenSSL::Provider.providers.size - orig.size)
+    end;
+  end
+
   def test_openssl_provider_cipher_rc4
     with_openssl(<<-'end;', ignore_stderr: true)
       OpenSSL::Provider.load("legacy")
