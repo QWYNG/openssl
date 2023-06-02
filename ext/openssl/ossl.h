@@ -62,6 +62,10 @@
 # define OSSL_USE_ENGINE
 #endif
 
+#if !defined(OSSL_USE_ENGINE) && OSSL_OPENSSL_PREREQ(3, 0, 0)
+# define OSSL_USE_PROVIDER
+#endif
+
 /*
  * Common Module
  */
@@ -194,6 +198,7 @@ void ossl_debug(const char *, ...);
 #endif
 #include "ossl_x509.h"
 #include "ossl_engine.h"
+#include "ossl_provider.h"
 #include "ossl_kdf.h"
 
 void Init_openssl(void);
