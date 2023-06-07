@@ -20,6 +20,8 @@ class OpenSSL::TestProvider < OpenSSL::TestCase
   end
 
   def test_openssl_legacy_provider
+    pend('Legacy providers is not supported on FIPS mode enabled') if OpenSSL.fips_mode
+    
     with_openssl(<<-'end;')
       OpenSSL::Provider.load("legacy")
       algo = "RC4"
