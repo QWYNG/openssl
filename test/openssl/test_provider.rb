@@ -12,10 +12,13 @@ class OpenSSL::TestProvider < OpenSSL::TestCase
   end
 
   def test_openssl_providers
+    pend('Legacy providers is not supported on FIPS mode enabled') if OpenSSL.fips_mode
+
     with_openssl <<-'end;'
-      providers = OpenSSL::Provider.providers
-      assert_kind_of(Array, providers)
-      assert_not_empty(providers)
+      legacy_provider = OpenSSL::Provider.load("legacy")
+      assert_equal(2, OpenSSL::Provider.providers.size)
+      assert_equal(true, legacy_provider.unload)
+      assert_equal(1, OpenSSL::Provider.providers.size)
     end;
   end
 

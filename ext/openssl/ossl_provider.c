@@ -68,26 +68,6 @@ ossl_provider_s_load(VALUE klass, VALUE name)
     return obj;
 }
 
-/*
- * call-seq:
- *    OpenSSL::Engine.cleanup
- *
- * This method unloads the given provider
- */
-static VALUE
-ossl_provider_s_unload(VALUE klass, VALUE obj)
-{
-    OSSL_PROVIDER *prov;
-    GetProvider(obj, prov);
-
-    int result = OSSL_PROVIDER_unload(prov);
-
-    if (result != 1) {
-      return Qfalse;
-    }
-    return Qtrue;
-}
-
 struct ary_with_state { VALUE ary; int state; };
 VALUE new_provider_wrap(VALUE klass)
 {
@@ -136,6 +116,26 @@ ossl_provider_s_providers(VALUE klass)
 
 /*
  * call-seq:
+ *    provider.unload -> true | false
+ *
+ * This method unloads this provider
+ */
+static VALUE
+ossl_provider_unload(VALUE self)
+{
+    OSSL_PROVIDER *prov;
+    GetProvider(self, prov);
+
+    int result = OSSL_PROVIDER_unload(prov);
+
+    if (result != 1) {
+      return Qfalse;
+    }
+    return Qtrue;
+}
+
+/*
+ * call-seq:
  *    provider.name -> string
  *
  * Get the name of this provider.
@@ -179,9 +179,9 @@ Init_ossl_provider(void)
 
     rb_undef_alloc_func(cProvider);
     rb_define_singleton_method(cProvider, "load", ossl_provider_s_load, 1);
-    rb_define_singleton_method(cProvider, "unload", ossl_provider_s_unload, 1);
     rb_define_singleton_method(cProvider, "providers", ossl_provider_s_providers, 0);
 
+    rb_define_method(cProvider, "unload", ossl_provider_unload, 0);
     rb_define_method(cProvider, "name", ossl_provider_get_name, 0);
     rb_define_method(cProvider, "inspect", ossl_provider_inspect, 0);
 }
