@@ -88,12 +88,30 @@ ossl_provider_s_unload(VALUE klass, VALUE obj)
     return Qtrue;
 }
 
+struct ary_with_state { VALUE ary; int state; };
+VALUE new_provider_wrap(VALUE klass)
+{
+    return NewProvider(klass);
+}
+
+struct rb_ary_push_arg {
+    VALUE ary;
+    VALUE value;
+};
+VALUE rb_ary_push_wrap(VALUE arg) {
+    struct rb_ary_push_arg *e = (struct rb_ary_push_arg *)arg;
+
+    return rb_ary_push(e->ary, e->value);
+}
+
 static int push_provider(OSSL_PROVIDER *prov, void *cbdata)
 {
-    VALUE obj = NewProvider(cProvider);
-    VALUE ary = (VALUE)cbdata;
+    struct ary_with_state *ary_with_state = (struct ary_with_state *)cbdata;
+    VALUE obj = rb_protect(new_provider_wrap, cProvider, &ary_with_state->state);
+    VALUE ary = ary_with_state -> ary;
     SetProvider(obj, prov);
-    rb_ary_push(ary, obj);
+    struct rb_ary_push_arg arg = { ary, obj };
+    rb_protect(rb_ary_push_wrap, (VALUE)&arg, &ary_with_state->state);
     return 1;
 }
 
@@ -107,8 +125,12 @@ static VALUE
 ossl_provider_s_providers(VALUE klass)
 {
     VALUE ary = rb_ary_new();
+    struct ary_with_state cbdata = { ary, 0 };
 
-    OSSL_PROVIDER_do_all(NULL, &push_provider, (void*)ary);
+    int result = OSSL_PROVIDER_do_all(NULL, &push_provider, (void*)&cbdata);
+    if (result != 1 || cbdata.state != 0) {
+      ossl_raise(eProviderError, "Failed to load providers\n");
+    }
     return ary;
 }
 
