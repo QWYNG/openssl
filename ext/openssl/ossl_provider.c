@@ -38,12 +38,12 @@ static const rb_data_type_t ossl_provider_type = {
  * This class is the access to openssl's Provider
  * See also, https://www.openssl.org/docs/manmaster/man7/provider.html
  */
-VALUE cProvider;
+static VALUE cProvider;
 /* Document-class: OpenSSL::Provider::ProviderError
  *
  * This is the generic exception for OpenSSL::Provider related errors
  */
-VALUE eProviderError;
+static VALUE eProviderError;
 
 /*
  * call-seq:
