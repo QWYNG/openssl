@@ -33,7 +33,7 @@ static const rb_data_type_t ossl_provider_type = {
 /*
  * Classes
  */
-/* Document-class: OpenSSL::Procider
+/* Document-class: OpenSSL::Provider
  *
  * This class is the access to openssl's Provider
  * See also, https://www.openssl.org/docs/manmaster/man7/provider.html
