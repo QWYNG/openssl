@@ -62,7 +62,7 @@
 # define OSSL_USE_ENGINE
 #endif
 
-#if !defined(OSSL_USE_ENGINE) && OSSL_OPENSSL_PREREQ(3, 0, 0)
+#if OSSL_OPENSSL_PREREQ(3, 0, 0)
 # define OSSL_USE_PROVIDER
 #endif
 
