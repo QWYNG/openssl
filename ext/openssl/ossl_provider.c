@@ -69,30 +69,27 @@ ossl_provider_s_load(VALUE klass, VALUE name)
 }
 
 struct ary_with_state { VALUE ary; int state; };
-VALUE new_provider_wrap(VALUE klass)
-{
-    return NewProvider(klass);
-}
+struct rb_push_provider_name_args { OSSL_PROVIDER *prov; VALUE ary; };
 
-struct rb_ary_push_arg {
-    VALUE ary;
-    VALUE value;
-};
-VALUE rb_ary_push_wrap(VALUE arg) {
-    struct rb_ary_push_arg *e = (struct rb_ary_push_arg *)arg;
+static VALUE
+rb_push_provider_name(VALUE rb_push_provider_name_args) {
+    struct rb_push_provider_name_args *args = (struct rb_push_provider_name_args *)rb_push_provider_name_args;
 
-    return rb_ary_push(e->ary, e->value);
+    VALUE name = rb_str_new2(OSSL_PROVIDER_get0_name(args->prov));
+    return rb_ary_push(args->ary, name);
 }
 
 static int push_provider(OSSL_PROVIDER *prov, void *cbdata)
 {
     struct ary_with_state *ary_with_state = (struct ary_with_state *)cbdata;
-    VALUE obj = rb_protect(new_provider_wrap, cProvider, &ary_with_state->state);
-    VALUE ary = ary_with_state -> ary;
-    SetProvider(obj, prov);
-    struct rb_ary_push_arg arg = { ary, obj };
-    rb_protect(rb_ary_push_wrap, (VALUE)&arg, &ary_with_state->state);
-    return 1;
+    struct rb_push_provider_name_args args = { prov, (VALUE)ary_with_state->ary };
+
+    rb_protect(rb_push_provider_name, (VALUE)&args, &ary_with_state->state);
+    if (ary_with_state->state) {
+      return 0;
+    } else {
+      return 1;
+    }
 }
 
 /*
@@ -102,15 +99,20 @@ static int push_provider(OSSL_PROVIDER *prov, void *cbdata)
  * Returns an array of currently loaded providers.
  */
 static VALUE
-ossl_provider_s_providers(VALUE klass)
+ossl_provider_s_provider_names(VALUE klass)
 {
     VALUE ary = rb_ary_new();
     struct ary_with_state cbdata = { ary, 0 };
 
     int result = OSSL_PROVIDER_do_all(NULL, &push_provider, (void*)&cbdata);
-    if (result != 1 || cbdata.state != 0) {
-      ossl_raise(eProviderError, "Failed to load providers\n");
+    if (result != 1 ) {
+      if (cbdata.state == 1) {
+        rb_jump_tag(cbdata.state);
+      } else {
+        ossl_raise(eProviderError, "Failed to load provider names\n");
+      }
     }
+
     return ary;
 }
 
@@ -179,7 +181,7 @@ Init_ossl_provider(void)
 
     rb_undef_alloc_func(cProvider);
     rb_define_singleton_method(cProvider, "load", ossl_provider_s_load, 1);
-    rb_define_singleton_method(cProvider, "providers", ossl_provider_s_providers, 0);
+    rb_define_singleton_method(cProvider, "provider_names", ossl_provider_s_provider_names, 0);
 
     rb_define_method(cProvider, "unload", ossl_provider_unload, 0);
     rb_define_method(cProvider, "name", ossl_provider_get_name, 0);

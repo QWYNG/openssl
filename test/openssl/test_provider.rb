@@ -14,9 +14,9 @@ class OpenSSL::TestProvider < OpenSSL::TestCase
   def test_openssl_providers
     with_openssl <<-'end;'
       legacy_provider = OpenSSL::Provider.load("legacy")
-      assert_equal(2, OpenSSL::Provider.providers.size)
+      assert_equal(2, OpenSSL::Provider.provider_names.size)
       assert_equal(true, legacy_provider.unload)
-      assert_equal(1, OpenSSL::Provider.providers.size)
+      assert_equal(1, OpenSSL::Provider.provider_names.size)
     end;
   end
 
