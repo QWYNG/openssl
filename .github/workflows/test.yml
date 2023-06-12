@@ -48,13 +48,10 @@ jobs:
         if: runner.os == 'Linux' || runner.os == 'macOS'
 
       # Enable provider search path for OpenSSL 3.0 in MSYS2.
+      # Remove when Ruby 3.2 build is updated
       - name: enable windows provider search path
         run: echo "OPENSSL_MODULES=$($env:RI_DEVKIT)\$($env:MSYSTEM_PREFIX)\lib\ossl-modules" >> $env:GITHUB_ENV
         if: runner.os == 'Windows' && matrix.ruby != 'mswin'
-
-      - name: enable windows provider search path for mswin
-        run: echo "OPENSSL_MODULES=C:\vcpkg\installed\x64-windows\bin" >> $env:GITHUB_ENV
-        if: runner.os == 'Windows' && matrix.ruby == 'mswin'
 
       - name: compile
         run:  rake compile -- --enable-debug
@@ -131,7 +128,7 @@ jobs:
         run: echo "OPENSSL_CONF=$(pwd)/test/openssl/fixtures/ssl/openssl_fips.cnf" >> $GITHUB_ENV
         if: matrix.fips_enabled
 
-      - name: set fips enviornment variable for testing.
+      - name: set fips environment variable for testing.
         run: echo "TEST_RUBY_OPENSSL_FIPS_ENABLED=true" >> $GITHUB_ENV
         if: matrix.fips_enabled
 
